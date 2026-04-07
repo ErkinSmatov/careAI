@@ -1,5 +1,5 @@
 {
-  "name": "glucotrack-prototype",
+  "name": "careai-prototype",
   "version": "1.0.0",
   "scripts": {
     "dev": "npx serve -l 3456 ."
