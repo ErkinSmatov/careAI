@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>GlucoTrack</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',-apple-system,sans-serif;background:#1a1a1a;display:flex;justify-content:center;align-items:center;min-height:100vh;overflow:hidden}
+:root{--bg:#EAEBEF;--card:#FFF;--green:#29C263;--green-light:#E0F5E8;--black:#1A1A1A;--gray:#8E8E93;--gray-light:#C7C7CC;--input-bg:#F4F4F7;--red:#EF4444;--red-light:#FEE2E2;--yellow:#F59E0B;--yellow-light:#FEF3C7;--blue:#3B82F6;--blue-light:#DBEAFE;--gap:6px}
+
+.phone{width:390px;height:844px;background:var(--bg);border-radius:44px;overflow:hidden;position:relative;box-shadow:0 0 0 8px #222,0 20px 60px rgba(0,0,0,.6)}
+.status-bar{height:54px;display:flex;align-items:center;justify-content:space-between;padding:8px 28px 0;font-size:15px;font-weight:600;color:var(--black);position:relative;z-index:10;flex-shrink:0}
+.status-bar .icons{display:flex;gap:6px;align-items:center}
+
+.screens{width:100%;height:100%;position:relative}
+.screen{position:absolute;top:0;left:0;width:100%;height:100%;background:var(--bg);display:flex;flex-direction:column;opacity:0;pointer-events:none;transition:opacity .3s,transform .3s;transform:translateX(20px)}
+.screen.active{opacity:1;pointer-events:auto;transform:translateX(0)}
+
+.scroll-content{flex:1;overflow-y:auto;overflow-x:hidden;padding-bottom:100px;-webkit-overflow-scrolling:touch}
+.scroll-content::-webkit-scrollbar{display:none}
+
+.card{background:var(--card);border-radius:16px;padding:14px;box-shadow:0 2px 8px rgba(0,0,0,.04)}
+
+/* Bottom Nav - Floating Pill */
+.bottom-nav{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);width:auto;min-width:220px;height:60px;background:var(--black);display:flex;align-items:center;justify-content:center;gap:6px;padding:8px 12px;border-radius:30px;box-shadow:0 8px 32px rgba(0,0,0,.25);z-index:100}
+.nav-item{display:flex;align-items:center;justify-content:center;cursor:pointer;background:none;border:none;font-family:inherit;font-size:0;color:rgba(255,255,255,.5);transition:all .2s;width:44px;height:44px;border-radius:50%}
+.nav-item.active{color:white;background:var(--green)}
+.nav-item .nav-icon{width:22px;height:22px;display:flex;align-items:center;justify-content:center}
+.nav-item span{display:none}
+.nav-fab{width:44px;height:44px;border-radius:50%;background:var(--green);border:none;color:white;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:none;transition:transform .2s;margin:0}
+.nav-fab:active{transform:scale(.92)}
+/* Doctor nav uses blue accent */
+.bottom-nav.doctor-nav .nav-item.active{background:var(--blue)}
+.bottom-nav.doctor-nav .nav-fab{background:var(--blue)}
+
+/* Login */
+.login-logo{display:flex;flex-direction:column;align-items:center;padding-top:40px;margin-bottom:32px}
+.login-icon{width:72px;height:72px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;color:white;margin-bottom:16px}
+.login-logo h1{font-size:28px;font-weight:800;color:var(--black)}
+.login-logo p{font-size:14px;color:var(--gray);margin-top:6px;text-align:center;padding:0 40px}
+.login-card{margin:0 20px;padding:28px 24px}
+.login-card h2{font-size:20px;font-weight:600;color:var(--black);margin-bottom:24px}
+.form-group{margin-bottom:16px}
+.form-label{font-size:13px;font-weight:500;color:var(--gray);margin-bottom:6px;display:block}
+.form-input{width:100%;height:52px;border:none;border-radius:12px;background:var(--input-bg);padding:0 16px;font-size:15px;font-family:inherit;color:var(--black);outline:none;transition:box-shadow .2s}
+.form-input:focus{box-shadow:0 0 0 2px var(--green)}
+.form-input::placeholder{color:var(--gray-light)}
+.password-wrap{position:relative}
+.password-wrap .eye-btn{position:absolute;right:16px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--gray)}
+.forgot-link{text-align:right;margin-top:8px;margin-bottom:20px}
+.forgot-link a{color:var(--green);font-size:13px;font-weight:500;text-decoration:none}
+.btn{width:100%;height:52px;border:none;border-radius:12px;font-size:16px;font-weight:600;font-family:inherit;cursor:pointer;transition:all .2s}
+.btn-green{background:var(--green);color:white}
+.btn-green:active{background:#22a854;transform:scale(.98)}
+.role-switch{text-align:center;margin-top:16px}
+.role-switch a{color:var(--green);font-size:14px;font-weight:500;text-decoration:none}
+.login-version{position:absolute;bottom:32px;width:100%;text-align:center;font-size:12px;color:var(--gray-light)}
+
+/* Home */
+.home-header{padding:4px 20px 12px;display:flex;justify-content:space-between;align-items:center}
+.home-header h2{font-size:18px;font-weight:700;color:var(--black)}
+.header-actions{display:flex;gap:8px}
+.header-btn{width:38px;height:38px;border-radius:50%;background:var(--card);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.06);color:var(--gray)}
+.sos-btn{background:var(--red);color:white;font-size:11px;font-weight:800}
+
+/* Quick Log Row */
+.quick-log{display:flex;gap:var(--gap);padding:0 20px;overflow-x:auto;margin-bottom:var(--gap)}
+.quick-log::-webkit-scrollbar{display:none}
+.ql-item{display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;flex-shrink:0}
+.ql-circle{width:56px;height:56px;border-radius:50%;background:var(--black);display:flex;align-items:center;justify-content:center;color:white;position:relative}
+.ql-circle.green{background:var(--green)}
+.ql-circle.has-photo{background-size:cover;background-position:center;border:3px solid var(--green)}
+.ql-badge{position:absolute;top:-2px;right:-2px;width:18px;height:18px;border-radius:50%;background:var(--green);color:white;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.ql-label{font-size:11px;color:var(--gray);font-weight:500}
+
+/* Stats Grid */
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--gap);padding:0 20px;margin-bottom:var(--gap)}
+.stat-card{padding:14px}
+.stat-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.stat-title{font-size:13px;font-weight:600;color:var(--black)}
+.stat-badge{font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px}
+.stat-badge.green{background:var(--green-light);color:var(--green)}
+.stat-badge.red{background:var(--red-light);color:var(--red)}
+.stat-value{font-size:34px;font-weight:800;color:var(--black);line-height:1.1;display:flex;align-items:center;gap:8px}
+.stat-value .arrow{width:28px;height:28px;border-radius:50%;background:var(--green);color:white;display:flex;align-items:center;justify-content:center}
+.stat-unit{font-size:12px;color:var(--gray)}
+.stat-subtitle{font-size:12px;color:var(--gray);margin-top:2px}
+.mini-chart{height:36px;margin:6px 0 2px}
+.mini-chart svg{width:100%;height:100%}
+.stat-footer{font-size:11px;color:var(--gray);margin-top:2px}
+
+/* Sections */
+.section-header{display:flex;justify-content:space-between;align-items:center;padding:0 20px;margin-bottom:var(--gap)}
+.section-title{font-size:15px;font-weight:700;color:var(--black)}
+.section-btn{padding:6px 14px;border-radius:14px;background:var(--green);color:white;font-size:12px;font-weight:600;border:none;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:4px}
+
+/* Meals */
+.meal-card{margin:0 20px var(--gap);padding:12px;display:flex;align-items:center;gap:12px}
+.meal-photo{width:48px;height:48px;border-radius:12px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.meal-info{flex:1}
+.meal-title{font-size:14px;font-weight:600;color:var(--black)}
+.meal-desc{font-size:12px;color:var(--gray);margin-top:2px}
+.meal-glucose{font-size:12px;font-weight:600;margin-top:2px}
+.meal-glucose.normal{color:var(--green)}
+.meal-glucose.high{color:var(--red)}
+
+/* AI Diet */
+.ai-diet-card{margin:0 20px var(--gap);padding:14px;border:2px solid var(--green);background:linear-gradient(135deg,#f0faf4,#fff)}
+.ai-badge{display:inline-flex;align-items:center;gap:4px;background:var(--green);color:white;padding:3px 10px;border-radius:8px;font-size:11px;font-weight:700;margin-bottom:8px}
+.ai-diet-title{font-size:15px;font-weight:700;color:var(--black);margin-bottom:6px}
+.ai-meal-row{display:flex;justify-content:space-between;padding:5px 0;font-size:13px;color:var(--black);border-bottom:1px solid #f0f0f0}
+.ai-meal-row:last-child{border:none}
+.ai-meal-row span:last-child{color:var(--gray);font-size:12px}
+
+/* Integrations */
+.integration-card{margin:0 20px var(--gap);padding:12px 14px;display:flex;align-items:center;gap:12px}
+.integration-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center}
+.integration-info{flex:1}
+.integration-label{font-size:12px;color:var(--gray)}
+.integration-value{font-size:18px;font-weight:700;color:var(--black)}
+.integration-delta{font-size:11px;font-weight:600}
+
+/* Log screen */
+.log-header{padding:8px 20px 12px;display:flex;align-items:center;gap:12px}
+.back-btn{width:36px;height:36px;border-radius:50%;background:var(--card);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.06);color:var(--black)}
+.log-header h2{font-size:18px;font-weight:700;color:var(--black)}
+.log-section{margin:0 20px var(--gap)}
+.log-section-title{font-size:14px;font-weight:700;color:var(--black);margin-bottom:var(--gap);display:flex;align-items:center;gap:6px}
+.log-card{padding:14px;margin-bottom:var(--gap)}
+.log-row{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.log-row:last-child{margin-bottom:0}
+.log-row label{font-size:13px;font-weight:500;color:var(--gray);min-width:100px;flex-shrink:0}
+.log-row input,.log-row select{flex:1;height:44px;border:none;border-radius:10px;background:var(--input-bg);padding:0 12px;font-size:14px;font-family:inherit;color:var(--black);outline:none}
+.log-row input:focus,.log-row select:focus{box-shadow:0 0 0 2px var(--green)}
+.log-chips{display:flex;flex-wrap:wrap;gap:6px}
+.log-chip{padding:8px 14px;border-radius:20px;background:var(--input-bg);font-size:13px;color:var(--black);border:2px solid transparent;cursor:pointer;transition:all .2s;font-family:inherit}
+.log-chip.selected{background:var(--green-light);border-color:var(--green);color:var(--green);font-weight:600}
+.photo-upload{width:100%;height:120px;border:2px dashed var(--gray-light);border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:var(--gray);font-size:13px;cursor:pointer;transition:all .2s}
+.photo-upload:hover{border-color:var(--green);color:var(--green)}
+.submit-btn-wrap{padding:12px 20px}
+
+/* Doctor */
+.doctor-header{padding:4px 20px 12px}
+.doctor-header h2{font-size:18px;font-weight:700;color:var(--black);display:flex;align-items:center;gap:8px}
+.doctor-header p{font-size:13px;color:var(--gray);margin-top:2px}
+.search-bar{margin:0 20px 10px;position:relative}
+.search-bar input{width:100%;height:44px;border:none;border-radius:12px;background:var(--card);padding:0 16px 0 42px;font-size:14px;font-family:inherit;color:var(--black);outline:none;box-shadow:0 2px 8px rgba(0,0,0,.04)}
+.search-bar .search-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--gray)}
+.filter-row{display:flex;gap:6px;padding:0 20px;margin-bottom:10px;overflow-x:auto}
+.filter-row::-webkit-scrollbar{display:none}
+.filter-chip{padding:8px 14px;border-radius:20px;background:var(--card);font-size:13px;font-weight:500;color:var(--gray);border:none;cursor:pointer;white-space:nowrap;font-family:inherit;transition:all .2s}
+.filter-chip.active{background:var(--green);color:white}
+.filter-chip .badge-count{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;border-radius:9px;background:var(--red);color:white;font-size:10px;font-weight:700;margin-left:4px;padding:0 4px}
+
+.patient-card{margin:0 20px var(--gap);padding:14px;cursor:pointer;transition:all .2s}
+.patient-card:active{transform:scale(.98)}
+.patient-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;gap:10px}
+.patient-avatar{width:42px;height:42px;border-radius:50%;flex-shrink:0;background-size:cover;background-position:center;border:2px solid var(--input-bg)}
+.patient-info{flex:1}
+.patient-name{font-size:15px;font-weight:700;color:var(--black)}
+.patient-meta{font-size:12px;color:var(--gray);margin-top:2px}
+.patient-status{padding:4px 10px;border-radius:8px;font-size:11px;font-weight:700;flex-shrink:0;display:flex;align-items:center;gap:4px}
+.status-normal{background:var(--green-light);color:var(--green)}
+.status-warning{background:var(--yellow-light);color:var(--yellow)}
+.status-critical{background:var(--red-light);color:var(--red)}
+.patient-stats{display:flex;gap:16px}
+.patient-stat{display:flex;flex-direction:column}
+.patient-stat-label{font-size:11px;color:var(--gray)}
+.patient-stat-val{font-size:14px;font-weight:700;color:var(--black)}
+.patient-progress{margin-top:8px;display:flex;align-items:center;gap:8px}
+.progress-bar{flex:1;height:6px;border-radius:3px;background:var(--input-bg);overflow:hidden}
+.progress-fill{height:100%;border-radius:3px;background:var(--green)}
+.progress-label{font-size:11px;color:var(--gray);white-space:nowrap}
+
+/* Detail */
+.detail-tabs{display:flex;gap:0;margin:0 20px 10px;background:var(--card);border-radius:12px;padding:4px;box-shadow:0 2px 8px rgba(0,0,0,.04)}
+.detail-tab{flex:1;padding:10px;text-align:center;font-size:12px;font-weight:600;color:var(--gray);border:none;background:none;cursor:pointer;border-radius:10px;font-family:inherit;transition:all .2s}
+.detail-tab.active{background:var(--green);color:white}
+.detail-info-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f0f0f0;font-size:13px}
+.detail-info-row:last-child{border:none}
+.detail-info-label{color:var(--gray)}
+.detail-info-value{color:var(--black);font-weight:600}
+
+/* Notifications */
+.notif-card{margin:0 20px var(--gap);padding:14px;display:flex;gap:12px}
+.notif-icon{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.notif-info{flex:1}
+.notif-title{font-size:14px;font-weight:600;color:var(--black)}
+.notif-desc{font-size:12px;color:var(--gray);margin-top:3px;line-height:1.4}
+.notif-time{font-size:11px;color:var(--gray-light);margin-top:5px}
+.notif-input-row{display:flex;gap:8px;margin-top:8px}
+.notif-input{flex:1;height:40px;border:none;border-radius:10px;background:var(--input-bg);padding:0 12px;font-size:14px;font-family:inherit;color:var(--black);outline:none}
+.notif-submit{height:40px;padding:0 16px;border:none;border-radius:10px;background:var(--green);color:white;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit}
+
+/* Profile */
+.profile-avatar{width:80px;height:80px;border-radius:50%;background:var(--green-light);display:flex;align-items:center;justify-content:center;margin:0 auto 12px}
+.profile-name{font-size:20px;font-weight:700;color:var(--black);text-align:center}
+.profile-sub{font-size:13px;color:var(--gray);text-align:center;margin-top:4px}
+.profile-row{display:flex;align-items:center;gap:12px;padding:14px;cursor:pointer;transition:background .2s}
+.profile-row:active{background:var(--input-bg)}
+.profile-row-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center}
+.profile-row-info{flex:1}
+.profile-row-label{font-size:14px;font-weight:500;color:var(--black)}
+.profile-row-desc{font-size:12px;color:var(--gray);margin-top:1px}
+.profile-divider{height:1px;background:#f0f0f0;margin:0 14px}
+
+/* Meal Detail Modal */
+.modal-overlay{position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:200;display:none;align-items:flex-end;justify-content:center}
+.modal-overlay.show{display:flex}
+.modal-sheet{width:100%;background:var(--card);border-radius:24px 24px 0 0;padding:20px;max-height:80%;overflow-y:auto}
+.modal-handle{width:40px;height:4px;border-radius:2px;background:var(--gray-light);margin:0 auto 16px}
+.modal-photo{width:100%;height:200px;border-radius:16px;background-size:cover;background-position:center;margin-bottom:16px}
+.modal-close{position:absolute;top:12px;right:16px;width:32px;height:32px;border-radius:50%;background:rgba(0,0,0,.4);border:none;color:white;cursor:pointer;display:flex;align-items:center;justify-content:center}
+
+/* Camera */
+.camera-overlay{position:absolute;top:0;left:0;width:100%;height:100%;background:#000;z-index:300;display:none;flex-direction:column;align-items:center;justify-content:center}
+.camera-overlay.show{display:flex}
+.camera-viewfinder{width:320px;height:320px;border:3px solid rgba(255,255,255,.3);border-radius:20px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.5);flex-direction:column;gap:12px}
+.camera-hint{color:rgba(255,255,255,.7);font-size:14px;margin-top:20px}
+.camera-btn{width:72px;height:72px;border-radius:50%;background:white;border:4px solid rgba(255,255,255,.3);cursor:pointer;margin-top:30px;transition:transform .1s}
+.camera-btn:active{transform:scale(.9)}
+.camera-close{position:absolute;top:60px;left:24px;background:none;border:none;color:white;cursor:pointer}
+</style>
+</head>
+<body>
+
+<div class="phone">
+<div class="screens">
+
+<!-- ========== LOGIN ========== -->
+<div class="screen active" id="screen-login">
+  <div class="status-bar"><span>9:41</span><div class="icons"><i data-lucide="signal" style="width:16px;height:16px"></i><i data-lucide="battery-full" style="width:16px;height:16px"></i></div></div>
+  <div class="scroll-content">
+    <div class="login-logo">
+      <div class="login-icon"><i data-lucide="heart-pulse" style="width:32px;height:32px"></i></div>
+      <h1>GlucoTrack</h1>
+      <p>Контроль глюкозы под наблюдением врача</p>
+    </div>
+    <div class="card login-card">
+      <h2>Войти в аккаунт</h2>
+      <div class="form-group">
+        <label class="form-label">ИИН (12 цифр)</label>
+        <input type="text" class="form-input" placeholder="000000000000" maxlength="12">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Пароль</label>
+        <div class="password-wrap">
+          <input type="password" class="form-input" placeholder="••••••••" id="pw-input">
+          <button class="eye-btn" onclick="togglePw()"><i data-lucide="eye" style="width:18px;height:18px"></i></button>
+        </div>
+      </div>
+      <div class="forgot-link"><a href="#">Забыли пароль?</a></div>
+      <button class="btn btn-green" onclick="showScreen('screen-home')">Войти</button>
+      <div class="role-switch"><a href="#" onclick="showScreen('screen-doctor');return false;">Войти как врач</a></div>
+    </div>
+  </div>
+  <div class="login-version">v1.0.0</div>
+</div>
+
+<!-- ========== HOME ========== -->
+<div class="screen" id="screen-home">
+  <div class="status-bar"><span>9:41</span><div class="icons"><i data-lucide="signal" style="width:16px;height:16px"></i><i data-lucide="battery-full" style="width:16px;height:16px"></i></div></div>
+  <div class="scroll-content">
+    <div class="home-header">
+      <h2>Доброе утро, Алия</h2>
+      <div class="header-actions">
+        <button class="header-btn sos-btn" title="SOS">SOS</button>
+        <button class="header-btn" onclick="showScreen('screen-notif')"><i data-lucide="bell" style="width:18px;height:18px"></i></button>
+      </div>
+    </div>
+
+    <div class="quick-log">
+      <div class="ql-item" onclick="showMealDetail()">
+        <div class="ql-circle has-photo" style="background-image:url('https://images.unsplash.com/photo-1525351484163-7529414344d8?w=100&h=100&fit=crop')">
+          <div class="ql-badge"><i data-lucide="check" style="width:10px;height:10px"></i></div>
+        </div>
+        <span class="ql-label">Завтрак</span>
+      </div>
+      <div class="ql-item" onclick="openCamera('Обед')">
+        <div class="ql-circle"><i data-lucide="utensils" style="width:22px;height:22px"></i></div>
+        <span class="ql-label">Обед</span>
+      </div>
+      <div class="ql-item" onclick="openCamera('Перекус')">
+        <div class="ql-circle"><i data-lucide="apple" style="width:22px;height:22px"></i></div>
+        <span class="ql-label">Перекус</span>
+      </div>
+      <div class="ql-item" onclick="openCamera('Ужин')">
+        <div class="ql-circle"><i data-lucide="moon" style="width:22px;height:22px"></i></div>
+        <span class="ql-label">Ужин</span>
+      </div>
+      <div class="ql-item" onclick="showScreen('screen-log')">
+        <div class="ql-circle green"><i data-lucide="droplets" style="width:22px;height:22px"></i></div>
+        <span class="ql-label">Глюкоза</span>
+      </div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="card stat-card">
+        <div class="stat-header"><span class="stat-title">Глюкоза</span><span class="stat-badge green">В норме</span></div>
+        <div class="stat-value">6.8 <div class="arrow"><i data-lucide="arrow-right" style="width:14px;height:14px"></i></div></div>
+        <span class="stat-unit">ммоль/л</span>
+        <div class="mini-chart"><svg viewBox="0 0 160 40" fill="none"><path d="M0,30 Q20,28 30,22 T60,18 T90,24 T120,14 T150,10 L160,8" stroke="#29C263" stroke-width="2" fill="none"/><circle cx="158" cy="8" r="4" fill="#29C263"/></svg></div>
+        <span class="stat-footer">Норма: 3.9 – 7.8</span>
+      </div>
+      <div class="card stat-card">
+        <div class="stat-header"><span class="stat-title">A1C</span><span class="stat-badge green">↓ 0.3%</span></div>
+        <div class="stat-value" style="font-size:32px">7.1%</div>
+        <span class="stat-subtitle">Ср. за 90 дней</span>
+        <div class="mini-chart"><svg viewBox="0 0 160 40" fill="none"><path d="M0,10 Q30,12 50,18 T100,22 T140,28 L160,32" stroke="#29C263" stroke-width="2" fill="none" opacity=".4"/><line x1="0" y1="25" x2="160" y2="25" stroke="#29C263" stroke-width="1" stroke-dasharray="4 3" opacity=".5"/></svg></div>
+        <span class="stat-footer">Цель: 6.5%</span>
+      </div>
+      <div class="card stat-card">
+        <div class="stat-header"><span class="stat-title">Шаги</span><span class="stat-badge green">↑ 0.3%</span></div>
+        <div class="stat-value" style="font-size:28px">11 374</div>
+      </div>
+      <div class="card stat-card">
+        <div class="stat-header"><span class="stat-title">Активность</span><span class="stat-badge red">↓ 2.3%</span></div>
+        <div class="stat-value" style="font-size:28px">1ч 27м</div>
+      </div>
+    </div>
+
+    <div class="section-header"><span class="section-title">Питание за день</span><button class="section-btn" onclick="openCamera('Еда')"><i data-lucide="plus" style="width:14px;height:14px"></i> Добавить</button></div>
+    <div class="card meal-card">
+      <div class="meal-photo" style="background:#F5E6D3;"><i data-lucide="egg-fried" style="width:24px;height:24px;color:#D97706"></i></div>
+      <div class="meal-info"><div class="meal-title">Завтрак · 08:30</div><div class="meal-desc">Яичница, хлеб • ХЕ: 2.5</div><div class="meal-glucose normal">7.2 ммоль/л</div></div>
+    </div>
+    <div class="card meal-card">
+      <div class="meal-photo" style="background:#D4EDDA;"><i data-lucide="salad" style="width:24px;height:24px;color:#16A34A"></i></div>
+      <div class="meal-info"><div class="meal-title">Обед · 13:15</div><div class="meal-desc">Салат, суп • ХЕ: 4.0</div><div class="meal-glucose high">9.1 ммоль/л</div></div>
+    </div>
+
+    <div class="section-header" style="margin-top:4px"><span class="section-title">Рацион от ИИ</span></div>
+    <div class="card ai-diet-card">
+      <div class="ai-badge"><i data-lucide="bot" style="width:12px;height:12px"></i> ИИ · Стол №9</div>
+      <div class="ai-diet-title">Рекомендации на вечер</div>
+      <div class="ai-meal-row"><span>Ужин</span><span>Куриная грудка, овощи гриль • 3 ХЕ</span></div>
+      <div class="ai-meal-row"><span>Перекус</span><span>Творог 2%, орехи • 1 ХЕ</span></div>
+      <div class="ai-meal-row"><span>Прогноз</span><span style="color:var(--green);font-weight:600">~6.2 ммоль/л</span></div>
+    </div>
+
+    <div class="section-header"><span class="section-title">Интеграции</span></div>
+    <div class="card integration-card">
+      <div class="integration-icon" style="background:var(--green-light);color:var(--green)"><i data-lucide="heart" style="width:20px;height:20px"></i></div>
+      <div class="integration-info"><div class="integration-label">iHealth · Пульс</div><div class="integration-value">72 <span style="font-size:13px;font-weight:400;color:var(--gray)">уд/мин</span></div></div>
+      <span class="integration-delta" style="color:var(--green)">Норма</span>
+    </div>
+    <div class="card integration-card">
+      <div class="integration-icon" style="background:var(--blue-light);color:var(--blue)"><i data-lucide="weight" style="width:20px;height:20px"></i></div>
+      <div class="integration-info"><div class="integration-label">Google Fit · Вес</div><div class="integration-value">74.2 <span style="font-size:13px;font-weight:400;color:var(--gray)">кг</span></div></div>
+      <span class="integration-delta" style="color:var(--green)">↓ 0.8 кг</span>
+    </div>
+  </div>
+
+  <div class="bottom-nav">
+    <button class="nav-item active" onclick="showScreen('screen-home')"><div class="nav-icon"><i data-lucide="house" style="width:22px;height:22px"></i></div><span>Главная</span></button>
+    <button class="nav-item" onclick="showScreen('screen-log')"><div class="nav-icon"><i data-lucide="clipboard-list" style="width:22px;height:22px"></i></div><span>Ввод</span></button>
+    <button class="nav-fab" onclick="openCamera('Еда')"><i data-lucide="plus" style="width:28px;height:28px;color:white"></i></button>
+    <button class="nav-item" onclick="showScreen('screen-notif')"><div class="nav-icon"><i data-lucide="bell" style="width:22px;height:22px"></i></div><span>Алерты</span></button>
+    <button class="nav-item" onclick="showScreen('screen-profile')"><div class="nav-icon"><i data-lucide="user" style="width:22px;height:22px"></i></div><span>Профиль</span></button>
+  </div>
+
+  <!-- Meal Detail Modal -->
+  <div class="modal-overlay" id="meal-modal" onclick="closeMealDetail(event)">
+    <div class="modal-sheet" onclick="event.stopPropagation()">
+      <div class="modal-handle"></div>
+      <div class="modal-photo" style="background-image:url('https://images.unsplash.com/photo-1525351484163-7529414344d8?w=400&h=300&fit=crop');position:relative">
+        <button class="modal-close" onclick="closeMealDetail()"><i data-lucide="x" style="width:16px;height:16px"></i></button>
+      </div>
+      <h3 style="font-size:18px;font-weight:700;color:var(--black);margin-bottom:4px">Завтрак · 08:30</h3>
+      <p style="font-size:13px;color:var(--gray);margin-bottom:12px">Определено ИИ автоматически</p>
+      <div class="card" style="margin-bottom:10px;padding:14px">
+        <div style="font-size:14px;font-weight:700;color:var(--black);margin-bottom:8px;display:flex;align-items:center;gap:6px"><i data-lucide="scan-search" style="width:16px;height:16px;color:var(--green)"></i> Состав</div>
+        <div class="detail-info-row"><span class="detail-info-label">Яичница (2 яйца)</span><span class="detail-info-value">0.5 ХЕ</span></div>
+        <div class="detail-info-row"><span class="detail-info-label">Хлеб белый (1 кусок)</span><span class="detail-info-value">1.5 ХЕ</span></div>
+        <div class="detail-info-row"><span class="detail-info-label">Масло сливочное</span><span class="detail-info-value">0 ХЕ</span></div>
+        <div class="detail-info-row"><span class="detail-info-label">Чай без сахара</span><span class="detail-info-value">0 ХЕ</span></div>
+        <div style="border-top:2px solid var(--green-light);margin-top:8px;padding-top:8px;display:flex;justify-content:space-between;font-size:14px;font-weight:700">
+          <span style="color:var(--black)">Итого ХЕ</span><span style="color:var(--green)">2.0 ХЕ</span>
+        </div>
+      </div>
+      <div class="card" style="padding:14px">
+        <div style="font-size:14px;font-weight:700;color:var(--black);margin-bottom:8px;display:flex;align-items:center;gap:6px"><i data-lucide="droplets" style="width:16px;height:16px;color:var(--green)"></i> Глюкоза</div>
+        <div class="detail-info-row"><span class="detail-info-label">До еды</span><span class="detail-info-value" style="color:var(--green)">5.8 ммоль/л</span></div>
+        <div class="detail-info-row"><span class="detail-info-label">Через 2ч после</span><span class="detail-info-value" style="color:var(--green)">7.2 ммоль/л</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Camera Overlay -->
+  <div class="camera-overlay" id="camera-overlay">
+    <button class="camera-close" onclick="closeCamera()"><i data-lucide="x" style="width:28px;height:28px"></i></button>
+    <div class="camera-viewfinder">
+      <i data-lucide="camera" style="width:48px;height:48px"></i>
+      <span style="font-size:13px">Наведите на еду</span>
+    </div>
+    <div class="camera-hint" id="camera-hint">Сфотографируйте тарелку</div>
+    <button class="camera-btn" onclick="takeFakePhoto()"></button>
+  </div>
+</div>
+
+<!-- ========== QUICK LOG ========== -->
+<div class="screen" id="screen-log">
+  <div class="status-bar"><span>9:41</span><div class="icons"><i data-lucide="signal" style="width:16px;height:16px"></i><i data-lucide="battery-full" style="width:16px;height:16px"></i></div></div>
+  <div class="scroll-content">
+    <div class="log-header"><button class="back-btn" onclick="showScreen('screen-home')"><i data-lucide="arrow-left" style="width:18px;height:18px"></i></button><h2>Ввод данных</h2></div>
+
+    <div class="log-section">
+      <div class="log-section-title"><i data-lucide="droplets" style="width:16px;height:16px;color:var(--green)"></i> Показатели</div>
+      <div class="card log-card">
+        <div class="log-row"><label>Глюкоза</label><input type="number" placeholder="ммоль/л" step="0.1"></div>
+        <div class="log-row"><label>Время замера</label><select><option>Натощак</option><option>Перед обедом</option><option>Через 2ч после еды</option><option>На ночь</option><option>Ночь 03:00</option></select></div>
+        <div class="log-row"><label>Пульс</label><input type="number" placeholder="уд/мин (iHealth)"></div>
+        <div class="log-row"><label>Вес</label><input type="number" placeholder="кг" step="0.1"></div>
+      </div>
+    </div>
+
+    <div class="log-section">
+      <div class="log-section-title"><i data-lucide="pill" style="width:16px;height:16px;color:var(--blue)"></i> Терапия</div>
+      <div class="card log-card">
+        <div class="log-row"><label>Инсулин (баз.)</label><input type="number" placeholder="ЕД"></div>
+        <div class="log-row"><label>Инсулин (бол.)</label><input type="number" placeholder="ЕД"></div>
+        <div class="log-row"><label>Таблетки</label><div class="log-chips"><button class="log-chip selected" onclick="this.classList.toggle('selected')">Метформин ✓</button><button class="log-chip" onclick="this.classList.toggle('selected')">Гликлазид</button></div></div>
+      </div>
+    </div>
+
+    <div class="log-section">
+      <div class="log-section-title"><i data-lucide="utensils" style="width:16px;height:16px;color:var(--yellow)"></i> Питание</div>
+      <div class="card log-card">
+        <div class="log-row"><label>ХЕ</label><input type="number" placeholder="Хлебные единицы" step="0.5"></div>
+        <div class="log-row" style="flex-direction:column;align-items:stretch">
+          <label style="margin-bottom:6px;font-size:13px;font-weight:500;color:var(--gray)">Фото еды</label>
+          <div class="photo-upload" onclick="openCamera('Еда')">
+            <i data-lucide="camera" style="width:32px;height:32px"></i>
+            <span>Нажмите, чтобы сфотографировать</span>
+            <span style="font-size:11px;color:var(--green)">ИИ определит блюдо и ХЕ автоматически</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="log-section">
+      <div class="log-section-title"><i data-lucide="activity" style="width:16px;height:16px;color:var(--green)"></i> Активность</div>
+      <div class="card log-card">
+        <div class="log-row"><label>Нагрузка</label><select><option>Нет</option><option>Лёгкая</option><option>Интенсивная</option></select></div>
+        <div class="log-row"><label>Длительность</label><input type="number" placeholder="минут"></div>
+      </div>
+    </div>
+
+    <div class="log-section">
+      <div class="log-section-title"><i data-lucide="stethoscope" style="width:16px;height:16px;color:var(--red)"></i> Самочувствие</div>
+      <div class="card log-card">
+        <div style="margin-bottom:10px"><label class="form-label">Симптомы гипогликемии</label><div class="log-chips"><button class="log-chip" onclick="this.classList.toggle('selected')">Тремор</button><button class="log-chip" onclick="this.classList.toggle('selected')">Потливость</button><button class="log-chip" onclick="this.classList.toggle('selected')">Голод</button><button class="log-chip" onclick="this.classList.toggle('selected')">Слабость</button></div></div>
+        <div class="log-row"><label>Кетоны</label><select><option>Отрицательно</option><option>+ (следы)</option><option>++ (умеренно)</option><option>+++ (много)</option></select></div>
+        <div class="log-row" style="flex-direction:column;align-items:stretch"><label style="margin-bottom:6px;font-size:13px;font-weight:500;color:var(--gray)">Комментарий</label><input type="text" placeholder="Был стресс, болела голова..." style="height:56px"></div>
+      </div>
+    </div>
+
+    <div class="submit-btn-wrap"><button class="btn btn-green" onclick="showScreen('screen-home')">Сохранить и отправить врачу</button></div>
+  </div>
+</div>
+
+<!-- ========== PROFILE ========== -->
+<div class="screen" id="screen-profile">
+  <div class="status-bar"><span>9:41</span><div class="icons"><i data-lucide="signal" style="width:16px;height:16px"></i><i data-lucide="battery-full" style="width:16px;height:16px"></i></div></div>
+  <div class="scroll-content">
+    <div class="log-header"><button class="back-btn" onclick="showScreen('screen-home')"><i data-lucide="arrow-left" style="width:18px;height:18px"></i></button><h2>Профиль</h2></div>
+
+    <div style="padding:20px 20px 16px">
+      <div class="profile-avatar"><i data-lucide="user" style="width:36px;height:36px;color:var(--green)"></i></div>
+      <div class="profile-name">Ахметова Алия Р.</div>
+      <div class="profile-sub">ИИН: 010428****67 · Тип 2 диабет</div>
+    </div>
+
+    <div class="card" style="margin:0 20px var(--gap);padding:0;overflow:hidden">
+      <div class="profile-row">
+        <div class="profile-row-icon" style="background:var(--green-light);color:var(--green)"><i data-lucide="user-cog" style="width:18px;height:18px"></i></div>
+        <div class="profile-row-info"><div class="profile-row-label">Личные данные</div><div class="profile-row-desc">ФИО, дата рождения, контакты</div></div>
+        <i data-lucide="chevron-right" style="width:18px;height:18px;color:var(--gray-light)"></i>
+      </div>
+      <div class="profile-divider"></div>
+      <div class="profile-row">
+        <div class="profile-row-icon" style="background:var(--blue-light);color:var(--blue)"><i data-lucide="syringe" style="width:18px;height:18px"></i></div>
+        <div class="profile-row-info"><div class="profile-row-label">Мой диабет</div><div class="profile-row-desc">Тип, инсулин, целевой диапазон</div></div>
+        <i data-lucide="chevron-right" style="width:18px;height:18px;color:var(--gray-light)"></i>
+      </div>
+      <div class="profile-divider"></div>
+      <div class="profile-row">
+        <div class="profile-row-icon" style="background:var(--yellow-light);color:var(--yellow)"><i data-lucide="stethoscope" style="width:18px;height:18px"></i></div>
+        <div class="profile-row-info"><div class="profile-row-label">Мой врач</div><div class="profile-row-desc">Др. Касымов А.Б. · Эндокринолог</div></div>
+        <i data-lucide="chevron-right" style="width:18px;height:18px;color:var(--gray-light)"></i>
+      </div>
+    </div>
+
+    <div class="card" style="margin:0 20px var(--gap);padding:0;overflow:hidden">
+      <div class="profile-row">
+        <div class="profile-row-icon" style="background:var(--green-light);color:var(--green)"><i data-lucide="smartphone" style="width:18px;height:18px"></i></div>
+        <div class="profile-row-info"><div class="profile-row-label">Интеграции</div><div class="profile-row-desc">iHealth, Google Fit, Apple Health</div></div>
+        <i data-lucide="chevron-right" style="width:18px;height:18px;color:var(--gray-light)"></i>
+      </div>
+      <div class="profile-divider"></div>
+      <div class="profile-row">
+        <div class="profile-row-icon" style="background:var(--blue-light);color:var(--blue)"><i data-lucide="bell" style="width:18px;height:18px"></i></div>
+        <div class="profile-row-info"><div class="profile-row-label">Уведомления</div><div class="profile-row-desc">Расписание напоминаний</div></div>
+        <i data-lucide="chevron-right" style="width:18px;height:18px;color:var(--gray-light)"></i>
+      </div>
+      <div class="profile-divider"></div>
+      <div class="profile-row">
+        <div class="profile-row-icon" style="background:#F3E8FF;color:#9333EA"><i data-lucide="target" style="width:18px;height:18px"></i></div>
+        <div class="profile-row-info"><div class="profile-row-label">Цели</div><div class="profile-row-desc">HbA1c: 6.5% · Глюкоза: 4.0–7.0</div></div>
+        <i data-lucide="chevron-right" style="width:18px;height:18px;color:var(--gray-light)"></i>
+      </div>
+    </div>
+
+    <div class="card" style="margin:0 20px var(--gap);padding:0;overflow:hidden">
+      <div class="profile-row">
+        <div class="profile-row-icon" style="background:var(--input-bg);color:var(--gray)"><i data-lucide="shield" style="width:18px;height:18px"></i></div>
+        <div class="profile-row-info"><div class="profile-row-label">Безопасность</div><div class="profile-row-desc">Пароль, биометрия</div></div>
+        <i data-lucide="chevron-right" style="width:18px;height:18px;color:var(--gray-light)"></i>
+      </div>
+      <div class="profile-divider"></div>
+      <div class="profile-row">
+        <div class="profile-row-icon" style="background:var(--input-bg);color:var(--gray)"><i data-lucide="file-text" style="width:18px;height:18px"></i></div>
+        <div class="profile-row-info"><div class="profile-row-label">Экспорт данных</div><div class="profile-row-desc">PDF-отчёт за период</div></div>
+        <i data-lucide="chevron-right" style="width:18px;height:18px;color:var(--gray-light)"></i>
+      </div>
+      <div class="profile-divider"></div>
+      <div class="profile-row">
+        <div class="profile-row-icon" style="background:var(--input-bg);color:var(--gray)"><i data-lucide="help-circle" style="width:18px;height:18px"></i></div>
+        <div class="profile-row-info"><div class="profile-row-label">Помощь</div><div class="profile-row-desc">FAQ, поддержка</div></div>
+        <i data-lucide="chevron-right" style="width:18px;height:18px;color:var(--gray-light)"></i>
+      </div>
+    </div>
+
+    <div style="padding:0 20px var(--gap)">
+      <button class="btn" style="background:var(--red-light);color:var(--red);font-size:14px;height:46px" onclick="showScreen('screen-login')">Выйти из аккаунта</button>
+    </div>
+  </div>
+
+  <div class="bottom-nav">
+    <button class="nav-item" onclick="showScreen('screen-home')"><div class="nav-icon"><i data-lucide="house" style="width:22px;height:22px"></i></div><span>Главная</span></button>
+    <button class="nav-item" onclick="showScreen('screen-log')"><div class="nav-icon"><i data-lucide="clipboard-list" style="width:22px;height:22px"></i></div><span>Ввод</span></button>
+    <button class="nav-fab" onclick="openCamera('Еда')"><i data-lucide="plus" style="width:28px;height:28px;color:white"></i></button>
+    <button class="nav-item" onclick="showScreen('screen-notif')"><div class="nav-icon"><i data-lucide="bell" style="width:22px;height:22px"></i></div><span>Алерты</span></button>
+    <button class="nav-item active" onclick="showScreen('screen-profile')"><div class="nav-icon"><i data-lucide="user" style="width:22px;height:22px"></i></div><span>Профиль</span></button>
+  </div>
+</div>
+
+<!-- ========== DOCTOR ========== -->
+<div class="screen" id="screen-doctor">
+  <div class="status-bar"><span>9:41</span><div class="icons"><i data-lucide="signal" style="width:16px;height:16px"></i><i data-lucide="battery-full" style="width:16px;height:16px"></i></div></div>
+  <div class="scroll-content">
+    <div class="doctor-header"><h2><i data-lucide="stethoscope" style="width:22px;height:22px"></i> Кабинет врача</h2><p>Др. Касымов А.Б. · 14 пациентов</p></div>
+    <div class="search-bar"><span class="search-icon"><i data-lucide="search" style="width:16px;height:16px"></i></span><input type="text" placeholder="Поиск по ИИН или имени..."></div>
+    <div class="filter-row">
+      <button class="filter-chip active">Все (14)</button>
+      <button class="filter-chip">Критично <span class="badge-count">3</span></button>
+      <button class="filter-chip">Внимание <span class="badge-count">4</span></button>
+      <button class="filter-chip">Норма (7)</button>
+    </div>
+
+    <div class="card patient-card" onclick="showScreen('screen-patient-detail')">
+      <div class="patient-top"><div class="patient-avatar" style="background-image:url('https://i.pravatar.cc/100?img=5')"></div><div class="patient-info"><div class="patient-name">Бакытова Дана С.</div><div class="patient-meta">28 лет · Тип 1 · 5 мин назад</div></div><div class="patient-status status-critical"><i data-lucide="alert-triangle" style="width:12px;height:12px"></i> Критично</div></div>
+      <div class="patient-stats"><div class="patient-stat"><span class="patient-stat-label">Глюкоза</span><span class="patient-stat-val" style="color:var(--red)">15.2</span></div><div class="patient-stat"><span class="patient-stat-label">HbA1c</span><span class="patient-stat-val">9.1%</span></div><div class="patient-stat"><span class="patient-stat-label">Кетоны</span><span class="patient-stat-val" style="color:var(--red)">+++</span></div></div>
+      <div class="patient-progress"><div class="progress-bar"><div class="progress-fill" style="width:30%;background:var(--red)"></div></div><span class="progress-label">Дневник: 30%</span></div>
+    </div>
+
+    <div class="card patient-card">
+      <div class="patient-top"><div class="patient-avatar" style="background-image:url('https://i.pravatar.cc/100?img=12')"></div><div class="patient-info"><div class="patient-name">Жумабаев Тимур К.</div><div class="patient-meta">38 лет · Тип 2 · 2ч назад</div></div><div class="patient-status status-warning"><i data-lucide="alert-circle" style="width:12px;height:12px"></i> Внимание</div></div>
+      <div class="patient-stats"><div class="patient-stat"><span class="patient-stat-label">Глюкоза</span><span class="patient-stat-val" style="color:var(--yellow)">9.8</span></div><div class="patient-stat"><span class="patient-stat-label">HbA1c</span><span class="patient-stat-val">7.8%</span></div><div class="patient-stat"><span class="patient-stat-label">Посл. вход</span><span class="patient-stat-val">2ч</span></div></div>
+      <div class="patient-progress"><div class="progress-bar"><div class="progress-fill" style="width:65%;background:var(--yellow)"></div></div><span class="progress-label">Дневник: 65%</span></div>
+    </div>
+
+    <div class="card patient-card">
+      <div class="patient-top"><div class="patient-avatar" style="background-image:url('https://i.pravatar.cc/100?img=49')"></div><div class="patient-info"><div class="patient-name">Ахметова Алия Р.</div><div class="patient-meta">25 лет · Тип 2 · 5 мин назад</div></div><div class="patient-status status-normal"><i data-lucide="check-circle" style="width:12px;height:12px"></i> Норма</div></div>
+      <div class="patient-stats"><div class="patient-stat"><span class="patient-stat-label">Глюкоза</span><span class="patient-stat-val" style="color:var(--green)">6.8</span></div><div class="patient-stat"><span class="patient-stat-label">HbA1c</span><span class="patient-stat-val">7.1%</span></div><div class="patient-stat"><span class="patient-stat-label">Посл. вход</span><span class="patient-stat-val">5 мин</span></div></div>
+      <div class="patient-progress"><div class="progress-bar"><div class="progress-fill" style="width:92%"></div></div><span class="progress-label">Дневник: 92%</span></div>
+    </div>
+
+    <div class="card patient-card">
+      <div class="patient-top"><div class="patient-avatar" style="background-image:url('https://i.pravatar.cc/100?img=68')"></div><div class="patient-info"><div class="patient-name">Нурланов Аскар М.</div><div class="patient-meta">47 лет · Тип 1 · 1ч назад</div></div><div class="patient-status status-normal"><i data-lucide="check-circle" style="width:12px;height:12px"></i> Норма</div></div>
+      <div class="patient-stats"><div class="patient-stat"><span class="patient-stat-label">Глюкоза</span><span class="patient-stat-val" style="color:var(--green)">5.9</span></div><div class="patient-stat"><span class="patient-stat-label">HbA1c</span><span class="patient-stat-val">6.2%</span></div><div class="patient-stat"><span class="patient-stat-label">Посл. вход</span><span class="patient-stat-val">1ч</span></div></div>
+      <div class="patient-progress"><div class="progress-bar"><div class="progress-fill" style="width:88%"></div></div><span class="progress-label">Дневник: 88%</span></div>
+    </div>
+  </div>
+
+  <div class="bottom-nav doctor-nav">
+    <button class="nav-item active"><div class="nav-icon"><i data-lucide="users" style="width:22px;height:22px"></i></div><span>Пациенты</span></button>
+    <button class="nav-item"><div class="nav-icon"><i data-lucide="bar-chart-3" style="width:22px;height:22px"></i></div><span>Аналитика</span></button>
+    <button class="nav-fab" style="background:var(--blue)"><i data-lucide="plus" style="width:24px;height:24px;color:white"></i></button>
+    <button class="nav-item" onclick="showScreen('screen-notif')"><div class="nav-icon"><i data-lucide="bell" style="width:22px;height:22px"></i></div><span>Алерты</span></button>
+    <button class="nav-item" onclick="showScreen('screen-doctor-profile')"><div class="nav-icon"><i data-lucide="user" style="width:22px;height:22px"></i></div><span>Профиль</span></button>
+  </div>
+</div>
+
+<!-- ========== PATIENT DETAIL ========== -->
+<div class="screen" id="screen-patient-detail">
+  <div class="status-bar"><span>9:41</span><div class="icons"><i data-lucide="signal" style="width:16px;height:16px"></i><i data-lucide="battery-full" style="width:16px;height:16px"></i></div></div>
+  <div class="scroll-content">
+    <div class="log-header"><button class="back-btn" onclick="showScreen('screen-doctor')"><i data-lucide="arrow-left" style="width:18px;height:18px"></i></button><h2>Карточка пациента</h2></div>
+
+    <div class="card" style="margin:0 20px 10px;padding:20px;text-align:center">
+      <div style="width:60px;height:60px;border-radius:50%;background:var(--red-light);display:flex;align-items:center;justify-content:center;margin:0 auto 10px"><i data-lucide="user" style="width:28px;height:28px;color:var(--red)"></i></div>
+      <div style="font-size:17px;font-weight:700;color:var(--black)">Бакытова Дана С.</div>
+      <div style="font-size:13px;color:var(--gray);margin-top:4px">ИИН: 950315350023 · 28 лет · Тип 1</div>
+      <div style="margin-top:8px"><span class="patient-status status-critical" style="font-size:12px"><i data-lucide="alert-triangle" style="width:12px;height:12px"></i> Критично</span></div>
+    </div>
+
+    <div class="detail-tabs">
+      <button class="detail-tab active" onclick="switchDetailTab(this,'tab-overview')">Обзор</button>
+      <button class="detail-tab" onclick="switchDetailTab(this,'tab-history')">История</button>
+      <button class="detail-tab" onclick="switchDetailTab(this,'tab-diet')">Диета</button>
+      <button class="detail-tab" onclick="switchDetailTab(this,'tab-settings')">Поля</button>
+    </div>
+
+    <div id="tab-overview">
+      <div class="card" style="margin:0 20px var(--gap);padding:14px"><div style="font-size:14px;font-weight:700;color:var(--black);margin-bottom:10px;display:flex;align-items:center;gap:6px"><i data-lucide="activity" style="width:16px;height:16px;color:var(--green)"></i> Текущие показатели</div><div class="detail-info-row"><span class="detail-info-label">Глюкоза (посл.)</span><span class="detail-info-value" style="color:var(--red)">15.2 ммоль/л</span></div><div class="detail-info-row"><span class="detail-info-label">HbA1c</span><span class="detail-info-value">9.1%</span></div><div class="detail-info-row"><span class="detail-info-label">Кетоны</span><span class="detail-info-value" style="color:var(--red)">+++ (много)</span></div><div class="detail-info-row"><span class="detail-info-label">Вес</span><span class="detail-info-value">62.5 кг</span></div><div class="detail-info-row"><span class="detail-info-label">Пульс (iHealth)</span><span class="detail-info-value">88 уд/мин</span></div></div>
+      <div class="card" style="margin:0 20px var(--gap);padding:14px"><div style="font-size:14px;font-weight:700;color:var(--black);margin-bottom:10px;display:flex;align-items:center;gap:6px"><i data-lucide="clipboard-list" style="width:16px;height:16px;color:var(--blue)"></i> Назначения</div><div class="detail-info-row"><span class="detail-info-label">Инсулин (баз.)</span><span class="detail-info-value">Лантус 18 ЕД</span></div><div class="detail-info-row"><span class="detail-info-label">Инсулин (бол.)</span><span class="detail-info-value">НовоРапид по ХЕ</span></div><div class="detail-info-row"><span class="detail-info-label">Норма ХЕ/день</span><span class="detail-info-value">14-16 ХЕ</span></div><div class="detail-info-row"><span class="detail-info-label">Стол питания</span><span class="detail-info-value">Стол №9</span></div><div class="detail-info-row"><span class="detail-info-label">Целевой диапазон</span><span class="detail-info-value">4.0–7.0 ммоль/л</span></div></div>
+      <div style="padding:0 20px var(--gap)"><button class="btn btn-green" style="font-size:14px;height:46px;display:flex;align-items:center;justify-content:center;gap:6px"><i data-lucide="pencil" style="width:16px;height:16px"></i> Редактировать карточку</button></div>
+      <div class="card" style="margin:0 20px var(--gap);padding:14px"><div style="font-size:14px;font-weight:700;color:var(--black);margin-bottom:10px;display:flex;align-items:center;gap:6px"><i data-lucide="id-card" style="width:16px;height:16px;color:var(--gray)"></i> Карточка</div><div class="detail-info-row"><span class="detail-info-label">ФИО</span><span class="detail-info-value">Бакытова Дана Серикова</span></div><div class="detail-info-row"><span class="detail-info-label">Дата рождения</span><span class="detail-info-value">15.03.1995</span></div><div class="detail-info-row"><span class="detail-info-label">Тип диабета</span><span class="detail-info-value">1 тип</span></div><div class="detail-info-row"><span class="detail-info-label">Диагноз с</span><span class="detail-info-value">2012</span></div><div class="detail-info-row"><span class="detail-info-label">Сопут. заб.</span><span class="detail-info-value">Гипотиреоз</span></div><div class="detail-info-row"><span class="detail-info-label">Группа инв.</span><span class="detail-info-value">3-я группа</span></div><div class="detail-info-row"><span class="detail-info-label">Контакт</span><span class="detail-info-value">+7 701 *** ** 23</span></div></div>
+    </div>
+
+    <div id="tab-history" style="display:none">
+      <div class="card meal-card" style="margin-bottom:var(--gap)"><div class="meal-photo" style="background:var(--red-light);color:var(--red)"><i data-lucide="alert-triangle" style="width:20px;height:20px"></i></div><div class="meal-info"><div class="meal-title">Сегодня · 14:30</div><div class="meal-desc">Глюкоза: 15.2 ммоль/л · Кетоны: +++</div><div class="meal-glucose high">Критический</div></div></div>
+      <div class="card meal-card" style="margin-bottom:var(--gap)"><div class="meal-photo" style="background:var(--yellow-light);color:var(--yellow)"><i data-lucide="trending-up" style="width:20px;height:20px"></i></div><div class="meal-info"><div class="meal-title">Сегодня · 08:00</div><div class="meal-desc">Глюкоза: 11.4 ммоль/л · Натощак</div><div class="meal-glucose high">Выше нормы</div></div></div>
+      <div class="card meal-card" style="margin-bottom:var(--gap)"><div class="meal-photo" style="background:var(--green-light);color:var(--green)"><i data-lucide="check-circle" style="width:20px;height:20px"></i></div><div class="meal-info"><div class="meal-title">Вчера · 20:00</div><div class="meal-desc">Глюкоза: 7.8 ммоль/л · После ужина</div><div class="meal-glucose normal">В норме</div></div></div>
+    </div>
+
+    <div id="tab-diet" style="display:none">
+      <div class="card" style="margin:0 20px var(--gap);padding:14px"><div style="font-size:14px;font-weight:700;color:var(--black);margin-bottom:10px;display:flex;align-items:center;gap:6px"><i data-lucide="utensils" style="width:16px;height:16px;color:var(--green)"></i> Стол №9</div><div class="detail-info-row"><span class="detail-info-label">Завтрак</span><span class="detail-info-value">Каша, яйцо · 3 ХЕ</span></div><div class="detail-info-row"><span class="detail-info-label">Перекус</span><span class="detail-info-value">Яблоко · 1 ХЕ</span></div><div class="detail-info-row"><span class="detail-info-label">Обед</span><span class="detail-info-value">Суп, курица · 4 ХЕ</span></div><div class="detail-info-row"><span class="detail-info-label">Перекус</span><span class="detail-info-value">Творог, орехи · 1 ХЕ</span></div><div class="detail-info-row"><span class="detail-info-label">Ужин</span><span class="detail-info-value">Рыба, салат · 3 ХЕ</span></div></div>
+      <div style="padding:0 20px"><button class="btn btn-green" style="font-size:14px;height:46px;display:flex;align-items:center;justify-content:center;gap:6px"><i data-lucide="pencil" style="width:16px;height:16px"></i> Изменить диету</button></div>
+    </div>
+
+    <div id="tab-settings" style="display:none">
+      <div class="card" style="margin:0 20px var(--gap);padding:14px"><div style="font-size:14px;font-weight:700;color:var(--black);margin-bottom:10px;display:flex;align-items:center;gap:6px"><i data-lucide="list-plus" style="width:16px;height:16px;color:var(--green)"></i> Поля · Дневник</div><div class="detail-info-row"><span class="detail-info-label">Кетоны в моче</span><span class="detail-info-value" style="color:var(--green)">Активно</span></div><div class="detail-info-row"><span class="detail-info-label">Давление</span><span class="detail-info-value" style="color:var(--green)">Активно</span></div><div class="detail-info-row"><span class="detail-info-label">Настроение</span><span class="detail-info-value" style="color:var(--gray)">Неактивно</span></div></div>
+      <div class="card" style="margin:0 20px var(--gap);padding:14px"><div style="font-size:14px;font-weight:700;color:var(--black);margin-bottom:10px;display:flex;align-items:center;gap:6px"><i data-lucide="list-plus" style="width:16px;height:16px;color:var(--blue)"></i> Поля · Карточка</div><div class="detail-info-row"><span class="detail-info-label">Сопут. заболевания</span><span class="detail-info-value" style="color:var(--green)">Активно</span></div><div class="detail-info-row"><span class="detail-info-label">Группа инвалидности</span><span class="detail-info-value" style="color:var(--green)">Активно</span></div><div class="detail-info-row"><span class="detail-info-label">Результаты анализов</span><span class="detail-info-value" style="color:var(--green)">Активно</span></div></div>
+      <div style="padding:0 20px"><button class="btn btn-green" style="font-size:14px;height:46px;display:flex;align-items:center;justify-content:center;gap:6px"><i data-lucide="plus" style="width:16px;height:16px"></i> Добавить поле</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== DOCTOR PROFILE ========== -->
+<div class="screen" id="screen-doctor-profile">
+  <div class="status-bar"><span>9:41</span><div class="icons"><i data-lucide="signal" style="width:16px;height:16px"></i><i data-lucide="battery-full" style="width:16px;height:16px"></i></div></div>
+  <div class="scroll-content">
+    <div class="log-header"><button class="back-btn" onclick="showScreen('screen-doctor')"><i data-lucide="arrow-left" style="width:18px;height:18px"></i></button><h2>Профиль врача</h2></div>
+    <div style="padding:20px 20px 16px">
+      <div class="profile-avatar" style="background:var(--blue-light)"><i data-lucide="stethoscope" style="width:36px;height:36px;color:var(--blue)"></i></div>
+      <div class="profile-name">Др. Касымов А.Б.</div>
+      <div class="profile-sub">Эндокринолог · 14 пациентов</div>
+    </div>
+    <div class="card" style="margin:0 20px var(--gap);padding:0;overflow:hidden">
+      <div class="profile-row">
+        <div class="profile-row-icon" style="background:var(--blue-light);color:var(--blue)"><i data-lucide="user-cog" style="width:18px;height:18px"></i></div>
+        <div class="profile-row-info"><div class="profile-row-label">Личные данные</div><div class="profile-row-desc">ФИО, специализация, контакты</div></div>
+        <i data-lucide="chevron-right" style="width:18px;height:18px;color:var(--gray-light)"></i>
+      </div>
+      <div class="profile-divider"></div>
+      <div class="profile-row">
+        <div class="profile-row-icon" style="background:var(--green-light);color:var(--green)"><i data-lucide="users" style="width:18px;height:18px"></i></div>
+        <div class="profile-row-info"><div class="profile-row-label">Мои пациенты</div><div class="profile-row-desc">14 активных · 3 критичных</div></div>
+        <i data-lucide="chevron-right" style="width:18px;height:18px;color:var(--gray-light)"></i>
+      </div>
+      <div class="profile-divider"></div>
+      <div class="profile-row">
+        <div class="profile-row-icon" style="background:var(--yellow-light);color:var(--yellow)"><i data-lucide="bell" style="width:18px;height:18px"></i></div>
+        <div class="profile-row-info"><div class="profile-row-label">Алерты</div><div class="profile-row-desc">Порог критических значений</div></div>
+        <i data-lucide="chevron-right" style="width:18px;height:18px;color:var(--gray-light)"></i>
+      </div>
+    </div>
+    <div class="card" style="margin:0 20px var(--gap);padding:0;overflow:hidden">
+      <div class="profile-row">
+        <div class="profile-row-icon" style="background:var(--input-bg);color:var(--gray)"><i data-lucide="list-plus" style="width:18px;height:18px"></i></div>
+        <div class="profile-row-info"><div class="profile-row-label">Конструктор полей</div><div class="profile-row-desc">Кастомные поля для дневника и карточки</div></div>
+        <i data-lucide="chevron-right" style="width:18px;height:18px;color:var(--gray-light)"></i>
+      </div>
+      <div class="profile-divider"></div>
+      <div class="profile-row">
+        <div class="profile-row-icon" style="background:var(--input-bg);color:var(--gray)"><i data-lucide="file-text" style="width:18px;height:18px"></i></div>
+        <div class="profile-row-info"><div class="profile-row-label">Экспорт отчётов</div><div class="profile-row-desc">PDF-выгрузка по пациентам</div></div>
+        <i data-lucide="chevron-right" style="width:18px;height:18px;color:var(--gray-light)"></i>
+      </div>
+      <div class="profile-divider"></div>
+      <div class="profile-row">
+        <div class="profile-row-icon" style="background:var(--input-bg);color:var(--gray)"><i data-lucide="shield" style="width:18px;height:18px"></i></div>
+        <div class="profile-row-info"><div class="profile-row-label">Безопасность</div><div class="profile-row-desc">Пароль, ЭЦП</div></div>
+        <i data-lucide="chevron-right" style="width:18px;height:18px;color:var(--gray-light)"></i>
+      </div>
+    </div>
+    <div style="padding:0 20px var(--gap)">
+      <button class="btn" style="background:var(--red-light);color:var(--red);font-size:14px;height:46px" onclick="showScreen('screen-login')">Выйти из аккаунта</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== NOTIFICATIONS ========== -->
+<div class="screen" id="screen-notif">
+  <div class="status-bar"><span>9:41</span><div class="icons"><i data-lucide="signal" style="width:16px;height:16px"></i><i data-lucide="battery-full" style="width:16px;height:16px"></i></div></div>
+  <div class="scroll-content">
+    <div class="log-header"><button class="back-btn" onclick="goBack()"><i data-lucide="arrow-left" style="width:18px;height:18px"></i></button><h2>Уведомления</h2></div>
+
+    <div class="card notif-card" style="border-left:4px solid var(--red)"><div class="notif-icon" style="background:var(--red-light);color:var(--red)"><i data-lucide="alert-triangle" style="width:22px;height:22px"></i></div><div class="notif-info"><div class="notif-title">Критический уровень глюкозы!</div><div class="notif-desc">Ваш сахар 15.2 ммоль/л — значительно выше нормы. Проверьте кетоны, выпейте воды.</div><div class="notif-time">14:32 · Сегодня</div></div></div>
+
+    <div class="card notif-card" style="border-left:4px solid var(--green)"><div class="notif-icon" style="background:var(--green-light);color:var(--green)"><i data-lucide="droplets" style="width:22px;height:22px"></i></div><div class="notif-info"><div class="notif-title">Время измерить глюкозу</div><div class="notif-desc">Внесите показатель с глюкометра:</div><div class="notif-input-row"><input type="number" class="notif-input" placeholder="ммоль/л" step="0.1"><button class="notif-submit">Внести</button></div><div class="notif-time">12:00 · Сегодня</div></div></div>
+
+    <div class="card notif-card" style="border-left:4px solid var(--blue)"><div class="notif-icon" style="background:var(--blue-light);color:var(--blue)"><i data-lucide="camera" style="width:22px;height:22px"></i></div><div class="notif-info"><div class="notif-title">Сфотографируйте обед</div><div class="notif-desc">ИИ автоматически рассчитает ХЕ.</div><div style="margin-top:8px"><button class="section-btn" onclick="openCamera('Обед')" style="font-size:13px;padding:8px 16px;display:inline-flex;align-items:center;gap:4px"><i data-lucide="camera" style="width:14px;height:14px"></i> Сделать фото</button></div><div class="notif-time">12:05 · Сегодня</div></div></div>
+
+    <div class="card notif-card" style="border-left:4px solid var(--yellow)"><div class="notif-icon" style="background:var(--yellow-light);color:var(--yellow)"><i data-lucide="pill" style="width:22px;height:22px"></i></div><div class="notif-info"><div class="notif-title">Примите Метформин</div><div class="notif-desc">По назначению врача — 850 мг перед обедом</div><div style="margin-top:8px;display:flex;gap:8px"><button class="section-btn" style="font-size:13px;padding:8px 16px;display:inline-flex;align-items:center;gap:4px"><i data-lucide="check" style="width:14px;height:14px"></i> Принял</button><button class="section-btn" style="font-size:13px;padding:8px 16px;background:var(--input-bg);color:var(--gray)">Пропустил</button></div><div class="notif-time">11:55 · Сегодня</div></div></div>
+
+    <div class="card notif-card" style="border-left:4px solid var(--green)"><div class="notif-icon" style="background:var(--green-light);color:var(--green)"><i data-lucide="bar-chart-3" style="width:22px;height:22px"></i></div><div class="notif-info"><div class="notif-title">Еженедельный отчёт</div><div class="notif-desc">Средний сахар: 7.4 ммоль/л · HbA1c прогноз: 7.0% · Записей: 85%</div><div class="notif-time">Понедельник · 09:00</div></div></div>
+
+    <div class="card notif-card" style="border-left:4px solid var(--green)"><div class="notif-icon" style="background:var(--green-light);color:var(--green)"><i data-lucide="bot" style="width:22px;height:22px"></i></div><div class="notif-info"><div class="notif-title">ИИ: замечен паттерн</div><div class="notif-desc">Каждую среду вечером у вас повышается сахар. Попробуйте перенести нагрузку на вечер среды.</div><div class="notif-time">Вчера · 20:00</div></div></div>
+  </div>
+</div>
+
+</div>
+</div>
+
+<script>
+let prevScreen='screen-home';
+function showScreen(id){const c=document.querySelector('.screen.active');if(c){prevScreen=c.id;c.classList.remove('active')}document.getElementById(id).classList.add('active');lucide.createIcons()}
+function goBack(){showScreen(prevScreen||'screen-home')}
+function togglePw(){const i=document.getElementById('pw-input');i.type=i.type==='password'?'text':'password'}
+function switchDetailTab(btn,tabId){document.querySelectorAll('.detail-tab').forEach(t=>t.classList.remove('active'));btn.classList.add('active');['tab-overview','tab-history','tab-diet','tab-settings'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none'});const t=document.getElementById(tabId);if(t)t.style.display='block'}
+document.querySelectorAll('.filter-chip').forEach(c=>c.addEventListener('click',()=>{document.querySelectorAll('.filter-chip').forEach(x=>x.classList.remove('active'));c.classList.add('active')}));
+
+function showMealDetail(){document.getElementById('meal-modal').classList.add('show');lucide.createIcons()}
+function closeMealDetail(e){if(!e||e.target===e.currentTarget)document.getElementById('meal-modal').classList.remove('show')}
+
+function openCamera(label){document.getElementById('camera-hint').textContent='Сфотографируйте: '+label;document.getElementById('camera-overlay').classList.add('show');lucide.createIcons()}
+function closeCamera(){document.getElementById('camera-overlay').classList.remove('show')}
+function takeFakePhoto(){closeCamera();alert('Фото сделано! ИИ анализирует блюдо и автоматически записывает ХЕ в базу.')}
+
+document.addEventListener('DOMContentLoaded',()=>lucide.createIcons());
+</script>
+</body>
+</html>
